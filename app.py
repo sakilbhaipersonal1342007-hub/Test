@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+u#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -6,6 +6,7 @@
 SAKIL BHAI - USER PANEL v8.0 VIP PREMIUM
 🔥 CYBERPUNK EDITION · NEON GLASS MORPHISM
 Premium Hacking System · Firebase Powered
+📍 PERFECT LOCATION TRACKING WITH BORDER
 ============================================
 """
 
@@ -17,6 +18,7 @@ import json
 import os
 import re
 import requests
+import urllib.parse
 from functools import wraps
 
 app = Flask(__name__)
@@ -170,7 +172,7 @@ def session_required(f):
     return decorated
 
 # ============================================
-# LOGIN PAGE (NO REGISTER, NO FORGOT)
+# LOGIN PAGE
 # ============================================
 LOGIN_HTML = '''
 <!DOCTYPE html>
@@ -313,6 +315,262 @@ LOGIN_HTML = '''
             font-size: 13px;
             width: 38px;
             text-align: center;
+            font-family: 'Orbitron', monospace;
+        }
+        .form-group .input-wrap .line {
+            width: 1px;
+            height: 20px;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        .form-group .input-wrap input {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+        .form-group .input-wrap input::placeholder {
+            color: #88ddff;
+            font-size: 13px;
+            font-weight: 300;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #88ddff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 4px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+        }
+        .btn-login:hover {
+            border-color: rgba(0, 255, 255, 0.5);
+            color: #00ffff;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.05);
+        }
+        .btn-login i { font-size: 14px; color: #00ffff; }
+        .error-text {
+            color: #ff3355;
+            font-size: 11px;
+            padding: 6px 0;
+            display: none;
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 1px;
+        }
+        .error-text.show { display: block; animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 18px;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.05);
+        }
+        .status-bar .item {
+            font-size: 7px;
+            font-weight: 400;
+            color: #88ddff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: 'Orbitron', monospace;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .status-bar .item i { font-size: 8px; color: #00ffff; }
+        .footer-text {
+            text-align: center;
+            font-size: 6px;
+            color: #88ddff;
+            letter-spacing: 3px;
+            margin-top: 16px;
+            font-family: 'Orbitron', monospace;
+        }
+        .notice-box {
+            margin-top: 14px;
+            padding: 8px 12px;
+            background: rgba(255, 215, 0, 0.03);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 7px;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 0.5px;
+            color: #88ddff;
+            line-height: 1.6;
+        }
+        .notice-box .warn { color: #ff3355; }
+        .notice-box .gold { color: #ffd700; }
+        @media (max-width: 480px) {
+            .login-container { padding: 32px 22px; }
+            .login-container .brand-section h1 { font-size: 18px; letter-spacing: 2px; }
+            .status-bar { gap: 12px; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+    <div class="login-container">
+        <div class="brand-section">
+            <div class="icon-wrap"><i class="fas fa-shield-halved"></i></div>
+            <h1><span class="highlight">SAKIL</span> BHAI</h1>
+            <div class="tagline">premium · hacking · system</div>
+            <div class="divider"></div>
+        </div>
+        <form method="POST" action="{{ url_for('login_page') }}">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> username</label>
+                <div class="input-wrap">
+                    <div class="prefix"><i class="fas fa-user"></i></div>
+                    <div class="line"></div>
+                    <input type="text" name="username" placeholder="Enter username" required autofocus>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> password</label>
+                <div class="input-wrap">
+                    <div class="prefix"><i class="fas fa-lock"></i></div>
+                    <div class="line"></div>
+                    <input type="password" name="password" placeholder="Enter password" required>
+                </div>
+            </div>
+            <div class="error-text" id="loginError">{{ error }}</div>
+            <button type="submit" class="btn-login"><i class="fas fa-unlock-alt"></i> unlock system</button>
+        </form>
+        <div class="status-bar">
+            <span class="item"><i class="fas fa-database"></i> firebase</span>
+            <span class="item"><i class="fas fa-clock"></i> {{ remaining_minutes }}m</span>
+            <span class="item"><i class="fas fa-shield-alt"></i> secure</span>
+        </div>
+        <div class="notice-box">
+            <span class="warn">⚠</span> This Number Information Paid Server Hacking System is currently <span class="warn">not working</span>.<br>
+            Please <span style="color:#00ffff;">buy new VIP subscription</span> to continue.
+        </div>
+        <div class="footer-text">⚡ sakil bhai · premium system ⚡</div>
+    </div>
+    <script>
+        document.querySelector('input[name="username"]').focus();
+        document.querySelectorAll('input').forEach(el => {
+            el.addEventListener('input', function() {
+                document.getElementById('loginError').classList.remove('show');
+            });
+        });
+    </script>
+</body>
+</html>
+'''
+
+# ============================================
+# USER DASHBOARD (WITH PERFECT LOCATION)
+# ============================================
+USER_PANEL_HTML = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SAKIL BHAI · PREMIUM SYSTEM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #06060a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+        }
+        * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        input, textarea { -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-animation .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            animation: orbFloat 25s ease-in-out infinite;
+        }
+        .bg-animation .orb:nth-child(1) {
+            width: 500px; height: 500px;
+            background: rgba(0, 255, 255, 0.015);
+            top: -150px; left: -150px;
+        }
+        .bg-animation .orb:nth-child(2) {
+            width: 600px; height: 600px;
+            background: rgba(0, 255, 102, 0.01);
+            bottom: -200px; right: -200px;
+            animation-delay: -8s;
+        }
+        .bg-animation .orb:nth-child(3) {
+            width: 300px; height: 300px;
+            background: rgba(255, 0, 255, 0.008);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -15s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -40px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+        .session-bar {
+            width: 100%; height: 2px; background: rgba(0,0,0,0.5);
+            position: fixed; top: 0; left: 0; z-index: 1000;
+        }
+        .session-bar .fill {
+            height: 100%; background: linear-gradient(90deg, #00ff66, #00ffff);
+            width: 100%; transition: width 1s linear;
+            box-shadow: 0 0 30px rgba(0,255,255,0.02);
+        }
+        .session-bar .fill.warning { background: linear-gradient(90deg, #FF9933, #ff3355); }
+        .tricolor {
+            width: 100%; height: 3px; display: flex;
+            position: fixed; top: 2px; left: 0; z-index: 999;
+        }
+        .tricolor .saffron { width: 33.33%; background: #FF9933; }
+        .tricolor .white { width: 33.33%; background: #FFFFFF; }
+        .tricolor .green { width: 33.34%; background: #138808; }
+        .top-bar {
+            width: 100%; background: rgba(0,0,0,0.8); padding: 6px 0;
+            margin-top: 5px; position: sticky; top: 5px; z-index: 100;
+            border-bott-align: center;
             font-family: 'Orbitron', monospace;
         }
         .form-group .input-wrap .line {
