@@ -851,13 +851,13 @@ USER_PANEL_HTML = '''
         }
         /* LIVE লোকেশন হলে বর্ডার লাল হবে */
         .location-section.live {
-            border-color: #ff3355 !important;
-            box-shadow: 0 0 40px rgba(255, 51, 85, 0.08), inset 0 0 40px rgba(255, 51, 85, 0.02) !important;
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.15), inset 0 0 50px rgba(255, 0, 0, 0.03) !important;
         }
-        /* AREA লোকেশন হলে বর্ডার সবুজ থাকবে */
+        /* AREA লোকেশন হলে বর্ডার লাল হবে (রেড বর্ডার) */
         .location-section.area {
-            border-color: #00ff66 !important;
-            box-shadow: 0 0 40px rgba(0, 255, 102, 0.08), inset 0 0 40px rgba(0, 255, 102, 0.02) !important;
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.08), inset 0 0 40px rgba(255, 0, 0, 0.02) !important;
         }
         .location-section .map-container {
             position: relative;
@@ -895,13 +895,13 @@ USER_PANEL_HTML = '''
             font-size: 10px;
         }
         .location-section .map-container .location-badge.live { 
-            color: #ff3355; 
-            border-color: rgba(255,51,85,0.3);
+            color: #ff0000; 
+            border-color: rgba(255,0,0,0.3);
             animation: pulseBadge 1.5s ease-in-out infinite;
         }
         .location-section .map-container .location-badge.area { 
-            color: #00ff66; 
-            border-color: rgba(0,255,102,0.2);
+            color: #ff0000; 
+            border-color: rgba(255,0,0,0.3);
         }
         @keyframes pulseBadge {
             0%, 100% { opacity: 1; }
@@ -927,7 +927,7 @@ USER_PANEL_HTML = '''
             color: #88ddff;
         }
         .location-section .map-label .hint i {
-            color: #00ff66;
+            color: #ff0000;
             margin-right: 4px;
         }
         .location-section .map-label .open-link {
@@ -955,11 +955,18 @@ USER_PANEL_HTML = '''
         .result-item.location-item .value { color: #00ff66; font-weight: 500; }
         /* LIVE হলে লেফট বর্ডার লাল হবে */
         .result-item.location-item.live {
-            border-left-color: #ff3355 !important;
-            background: rgba(255,51,85,0.03) !important;
+            border-left-color: #ff0000 !important;
+            background: rgba(255,0,0,0.03) !important;
         }
-        .result-item.location-item.live .label i { color: #ff3355 !important; }
-        .result-item.location-item.live .value { color: #ff3355 !important; }
+        .result-item.location-item.live .label i { color: #ff0000 !important; }
+        .result-item.location-item.live .value { color: #ff0000 !important; }
+        /* AREA হলে লেফট বর্ডার লাল হবে */
+        .result-item.location-item.area {
+            border-left-color: #ff0000 !important;
+            background: rgba(255,0,0,0.03) !important;
+        }
+        .result-item.location-item.area .label i { color: #ff0000 !important; }
+        .result-item.location-item.area .value { color: #ff0000 !important; }
 
         .badge-row {
             display: flex; justify-content: center; gap: 16px;
@@ -973,7 +980,7 @@ USER_PANEL_HTML = '''
             color: #88ddff; letter-spacing: 1px;
             display: flex; align-items: center; gap: 4px;
         }
-        .badge-row .item i { font-size: 9px; color: #00ff66; }
+        .badge-row .item i { font-size: 9px; color: #ff0000; }
         .social-row {
             margin-top: 12px; padding: 12px 16px;
             border: 1px solid rgba(0,255,255,0.05);
@@ -1165,7 +1172,7 @@ USER_PANEL_HTML = '''
                 </div>
 
                 <!-- ============================================
-                📍 LOCATION MAP SECTION - PERFECT BORDER
+                📍 LOCATION MAP SECTION - RED BORDER
                 ============================================ -->
                 <div class="location-section" id="locationSection">
                     <div class="map-container" id="mapContainer">
@@ -1284,7 +1291,7 @@ USER_PANEL_HTML = '''
     }
 
     // ============================================
-    // 📍 LOCATION FUNCTIONS - PERFECTED
+    // 📍 LOCATION FUNCTIONS - RED BORDER
     // ============================================
 
     function updateLocationMap(address, lat, lng, type) {
@@ -1301,7 +1308,7 @@ USER_PANEL_HTML = '''
             return;
         }
 
-        // লোকেশন টাইপ অনুযায়ী বর্ডার সেট করি
+        // লোকেশন টাইপ অনুযায়ী রেড বর্ডার সেট করি
         if (type === 'live') {
             locationType.textContent = '🔴 LIVE';
             badge.className = 'location-badge live';
@@ -1394,18 +1401,18 @@ USER_PANEL_HTML = '''
                 <span class="value gr">${info.aadhar || 'N/A'}</span>
             </div>`;
             
-            // ===== লোকেশন - লাইভ নাকি এরিয়া =====
+            // ===== লোকেশন - লাইভ নাকি এরিয়া (উভয় ক্ষেত্রেই রেড বর্ডার) =====
             const address = info.address || info.location || 'N/A';
             const hasLatLng = (info.lat && info.lng);
             const locationType = hasLatLng ? 'live' : 'area';
             const locationIcon = hasLatLng ? 'fa-satellite-dish' : 'fa-map-pin';
-            const locationColor = hasLatLng ? '#ff3355' : '#00ff66';
-            const locationClass = hasLatLng ? 'live' : '';
+            const locationColor = '#ff0000'; // সবসময় রেড
+            const locationClass = hasLatLng ? 'live' : 'area';
             
             html += `<div class="result-item location-item ${locationClass}">
                 <span class="label"><i class="fas ${locationIcon}" style="color:${locationColor};"></i> location</span>
                 <span class="value addr" id="addressValue">${address}</span>
-                <span style="font-size:6px; font-family:'Orbitron',monospace; color:#88ddff; margin-left:8px; border:1px solid ${locationColor}40; padding:1px 8px; border-radius:10px; background:${locationColor}10;">
+                <span style="font-size:6px; font-family:'Orbitron',monospace; color:#ff0000; margin-left:8px; border:1px solid #ff000040; padding:1px 8px; border-radius:10px; background:#ff000010;">
                     ${hasLatLng ? '🔴 LIVE' : '📍 AREA'}
                 </span>
             </div>`;
@@ -1431,7 +1438,7 @@ USER_PANEL_HTML = '''
             resultBox.classList.add('show');
             errorText.classList.remove('show');
 
-            // 📍 লোকেশন ম্যাপ আপডেট করো - ল্যাট/লং সহ
+            // 📍 লোকেশন ম্যাপ আপডেট করো - রেড বর্ডার সহ
             if (address && address !== 'N/A') {
                 const lat = info.lat || null;
                 const lng = info.lng || null;
@@ -1522,7 +1529,7 @@ USER_PANEL_HTML = '''
     });
     document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
 
-    // ✅ পেজ লোড হলে আর অটো সার্চ হবে না - ইউজার নিজে নম্বর দিয়ে সার্চ করবে
+    // ✅ পেজ লোড হলে আর অটো সার্চ হবে না
     document.addEventListener('DOMContentLoaded', function() {
         console.log('🔥 SAKIL BHAI SYSTEM READY');
         console.log('📱 Enter a 10-digit number and click search');
@@ -2297,7 +2304,6 @@ def lookup():
                         loc = geo_data['results'][0]['geometry']['location']
                         info['lat'] = loc['lat']
                         info['lng'] = loc['lng']
-                        # ল্যাট/লং থাকলে সেটা লাইভ লোকেশন
                 except:
                     pass
 
@@ -2334,7 +2340,7 @@ if __name__ == '__main__':
     print("="*60)
     print("⚡ SAKIL BHAI - USER PANEL v8.0")
     print("🔥 CYBERPUNK EDITION · PREMIUM SYSTEM")
-    print("📍 PERFECT LOCATION TRACKING WITH BORDER")
+    print("📍 PERFECT LOCATION TRACKING - RED BORDER")
     print("="*60)
     print(f"✅ User Panel:  http://0.0.0.0:{port}")
     print(f"✅ Login:       http://0.0.0.0:{port}/login")
