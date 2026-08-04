@@ -1,4 +1,4 @@
-u#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -20,6 +20,7 @@ import re
 import requests
 import urllib.parse
 from functools import wraps
+import time
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
@@ -37,14 +38,23 @@ FIREBASE_CONFIG = {
     "measurementId": "G-LPE7H20EY6"
 }
 
+FIREBASE_AVAILABLE = False
+db = None
+
 try:
     import pyrebase
     firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
     db = firebase.database()
-    FIREBASE_AVAILABLE = True
-    print("✅ Firebase Connected")
-except:
-    print("⚠️ Using local fallback")
+    try:
+        db.child("test").shallow().get()
+        FIREBASE_AVAILABLE = True
+        print("✅ Firebase Connected")
+    except:
+        print("⚠️ Firebase connection timeout - using local fallback")
+        FIREBASE_AVAILABLE = False
+        db = None
+except Exception as e:
+    print(f"⚠️ Firebase error: {e} - using local fallback")
     FIREBASE_AVAILABLE = False
     db = None
 
@@ -489,263 +499,7 @@ LOGIN_HTML = '''
 '''
 
 # ============================================
-# USER DASHBOARD (WITH PERFECT LOCATION)
-# ============================================
-USER_PANEL_HTML = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SAKIL BHAI · PREMIUM SYSTEM</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #06060a;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
-            -webkit-user-select: none;
-        }
-        * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        input, textarea { -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
-        .bg-animation {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        .bg-animation .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            animation: orbFloat 25s ease-in-out infinite;
-        }
-        .bg-animation .orb:nth-child(1) {
-            width: 500px; height: 500px;
-            background: rgba(0, 255, 255, 0.015);
-            top: -150px; left: -150px;
-        }
-        .bg-animation .orb:nth-child(2) {
-            width: 600px; height: 600px;
-            background: rgba(0, 255, 102, 0.01);
-            bottom: -200px; right: -200px;
-            animation-delay: -8s;
-        }
-        .bg-animation .orb:nth-child(3) {
-            width: 300px; height: 300px;
-            background: rgba(255, 0, 255, 0.008);
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: -15s;
-        }
-        @keyframes orbFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(40px, -40px) scale(1.1); }
-            66% { transform: translate(-30px, 30px) scale(0.9); }
-        }
-        .session-bar {
-            width: 100%; height: 2px; background: rgba(0,0,0,0.5);
-            position: fixed; top: 0; left: 0; z-index: 1000;
-        }
-        .session-bar .fill {
-            height: 100%; background: linear-gradient(90deg, #00ff66, #00ffff);
-            width: 100%; transition: width 1s linear;
-            box-shadow: 0 0 30px rgba(0,255,255,0.02);
-        }
-        .session-bar .fill.warning { background: linear-gradient(90deg, #FF9933, #ff3355); }
-        .tricolor {
-            width: 100%; height: 3px; display: flex;
-            position: fixed; top: 2px; left: 0; z-index: 999;
-        }
-        .tricolor .saffron { width: 33.33%; background: #FF9933; }
-        .tricolor .white { width: 33.33%; background: #FFFFFF; }
-        .tricolor .green { width: 33.34%; background: #138808; }
-        .top-bar {
-            width: 100%; background: rgba(0,0,0,0.8); padding: 6px 0;
-            margin-top: 5px; position: sticky; top: 5px; z-index: 100;
-            border-bott-align: center;
-            font-family: 'Orbitron', monospace;
-        }
-        .form-group .input-wrap .line {
-            width: 1px;
-            height: 20px;
-            background: rgba(0, 255, 255, 0.1);
-        }
-        .form-group .input-wrap input {
-            flex: 1;
-            padding: 12px 16px;
-            background: transparent;
-            border: none;
-            color: #ffffff;
-            font-size: 15px;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-        }
-        .form-group .input-wrap input::placeholder {
-            color: #88ddff;
-            font-size: 13px;
-            font-weight: 300;
-        }
-        .btn-login {
-            width: 100%;
-            padding: 14px;
-            background: rgba(0, 255, 255, 0.05);
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            border-radius: 12px;
-            color: #88ddff;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Orbitron', monospace;
-            letter-spacing: 4px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-top: 4px;
-        }
-        .btn-login:hover {
-            border-color: rgba(0, 255, 255, 0.5);
-            color: #00ffff;
-            box-shadow: 0 0 40px rgba(0, 255, 255, 0.05);
-        }
-        .btn-login i { font-size: 14px; color: #00ffff; }
-        .error-text {
-            color: #ff3355;
-            font-size: 11px;
-            padding: 6px 0;
-            display: none;
-            text-align: center;
-            font-family: 'Orbitron', monospace;
-            letter-spacing: 1px;
-        }
-        .error-text.show { display: block; animation: shake 0.4s ease; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
-        .status-bar {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 18px;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 10px;
-            border: 1px solid rgba(0, 255, 255, 0.05);
-        }
-        .status-bar .item {
-            font-size: 7px;
-            font-weight: 400;
-            color: #88ddff;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            font-family: 'Orbitron', monospace;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .status-bar .item i { font-size: 8px; color: #00ffff; }
-        .footer-text {
-            text-align: center;
-            font-size: 6px;
-            color: #88ddff;
-            letter-spacing: 3px;
-            margin-top: 16px;
-            font-family: 'Orbitron', monospace;
-        }
-        .notice-box {
-            margin-top: 14px;
-            padding: 8px 12px;
-            background: rgba(255, 215, 0, 0.03);
-            border: 1px solid rgba(255, 215, 0, 0.1);
-            border-radius: 8px;
-            text-align: center;
-            font-size: 7px;
-            font-family: 'Orbitron', monospace;
-            letter-spacing: 0.5px;
-            color: #88ddff;
-            line-height: 1.6;
-        }
-        .notice-box .warn { color: #ff3355; }
-        .notice-box .gold { color: #ffd700; }
-        @media (max-width: 480px) {
-            .login-container { padding: 32px 22px; }
-            .login-container .brand-section h1 { font-size: 18px; letter-spacing: 2px; }
-            .status-bar { gap: 12px; flex-wrap: wrap; }
-        }
-    </style>
-</head>
-<body>
-    <div class="bg-animation">
-        <div class="orb"></div>
-        <div class="orb"></div>
-        <div class="orb"></div>
-    </div>
-    <div class="login-container">
-        <div class="brand-section">
-            <div class="icon-wrap"><i class="fas fa-shield-halved"></i></div>
-            <h1><span class="highlight">SAKIL</span> BHAI</h1>
-            <div class="tagline">premium · hacking · system</div>
-            <div class="divider"></div>
-        </div>
-        <form method="POST" action="{{ url_for('login_page') }}">
-            <div class="form-group">
-                <label><i class="fas fa-user"></i> username</label>
-                <div class="input-wrap">
-                    <div class="prefix"><i class="fas fa-user"></i></div>
-                    <div class="line"></div>
-                    <input type="text" name="username" placeholder="Enter username" required autofocus>
-                </div>
-            </div>
-            <div class="form-group">
-                <label><i class="fas fa-key"></i> password</label>
-                <div class="input-wrap">
-                    <div class="prefix"><i class="fas fa-lock"></i></div>
-                    <div class="line"></div>
-                    <input type="password" name="password" placeholder="Enter password" required>
-                </div>
-            </div>
-            <div class="error-text" id="loginError">{{ error }}</div>
-            <button type="submit" class="btn-login"><i class="fas fa-unlock-alt"></i> unlock system</button>
-        </form>
-        <div class="status-bar">
-            <span class="item"><i class="fas fa-database"></i> firebase</span>
-            <span class="item"><i class="fas fa-clock"></i> {{ remaining_minutes }}m</span>
-            <span class="item"><i class="fas fa-shield-alt"></i> secure</span>
-        </div>
-        <div class="notice-box">
-            <span class="warn">⚠</span> This Number Information Paid Server Hacking System is currently <span class="warn">not working</span>.<br>
-            Please <span style="color:#00ffff;">buy new VIP subscription</span> to continue.
-        </div>
-        <div class="footer-text">⚡ sakil bhai · premium system ⚡</div>
-    </div>
-    <script>
-        document.querySelector('input[name="username"]').focus();
-        document.querySelectorAll('input').forEach(el => {
-            el.addEventListener('input', function() {
-                document.getElementById('loginError').classList.remove('show');
-            });
-        });
-    </script>
-</body>
-</html>
-'''
-
-# ============================================
-# USER DASHBOARD (WITH PRIYANGSU CREDIT)
+# USER DASHBOARD - PERFECT LOCATION WITH BORDER
 # ============================================
 USER_PANEL_HTML = '''
 <!DOCTYPE html>
@@ -1077,6 +831,136 @@ USER_PANEL_HTML = '''
         .result-item .value.hl { color: #00ffff; font-weight: 500; }
         .result-item .value.gr { color: #00ff66; font-weight: 500; }
         .result-item .value.addr { font-size: 10px; color: #88ddff; line-height: 1.4; }
+
+        /* ============================================
+           LOCATION SECTION - PERFECT BORDER STYLES
+           ============================================ */
+        .location-section {
+            margin-top: 14px;
+            border: 3px solid #00ff66;
+            border-radius: 14px;
+            overflow: hidden;
+            display: none;
+            background: rgba(0,0,0,0.1);
+            box-shadow: 0 0 40px rgba(0, 255, 102, 0.08), inset 0 0 40px rgba(0, 255, 102, 0.02);
+            transition: all 0.4s ease;
+        }
+        .location-section.show { 
+            display: block; 
+            animation: slideUp 0.5s ease;
+        }
+        /* LIVE লোকেশন হলে বর্ডার লাল হবে */
+        .location-section.live {
+            border-color: #ff3355 !important;
+            box-shadow: 0 0 40px rgba(255, 51, 85, 0.08), inset 0 0 40px rgba(255, 51, 85, 0.02) !important;
+        }
+        /* AREA লোকেশন হলে বর্ডার সবুজ থাকবে */
+        .location-section.area {
+            border-color: #00ff66 !important;
+            box-shadow: 0 0 40px rgba(0, 255, 102, 0.08), inset 0 0 40px rgba(0, 255, 102, 0.02) !important;
+        }
+        .location-section .map-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: #0a0a1a;
+            cursor: pointer;
+        }
+        .location-section .map-container iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+            border-radius: 0;
+        }
+        .location-section .map-container .location-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 8px;
+            font-family: 'Orbitron', monospace;
+            color: #00ff66;
+            border: 1px solid rgba(0,255,102,0.2);
+            z-index: 10;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .location-section .map-container .location-badge i {
+            font-size: 10px;
+        }
+        .location-section .map-container .location-badge.live { 
+            color: #ff3355; 
+            border-color: rgba(255,51,85,0.3);
+            animation: pulseBadge 1.5s ease-in-out infinite;
+        }
+        .location-section .map-container .location-badge.area { 
+            color: #00ff66; 
+            border-color: rgba(0,255,102,0.2);
+        }
+        @keyframes pulseBadge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .location-section .map-label {
+            padding: 8px 14px;
+            font-size: 7px;
+            font-family: 'Orbitron', monospace;
+            color: #88ddff;
+            letter-spacing: 2px;
+            text-align: center;
+            background: rgba(0,0,0,0.15);
+            border-top: 1px solid rgba(0,255,255,0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .location-section .map-label .hint {
+            color: #88ddff;
+        }
+        .location-section .map-label .hint i {
+            color: #00ff66;
+            margin-right: 4px;
+        }
+        .location-section .map-label .open-link {
+            font-size: 7px;
+            font-family: 'Orbitron', monospace;
+            color: #00ffff;
+            text-decoration: none;
+            padding: 2px 12px;
+            border: 1px solid rgba(0,255,255,0.1);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .location-section .map-label .open-link:hover {
+            background: rgba(0,255,255,0.05);
+            border-color: rgba(0,255,255,0.3);
+        }
+        .result-item.location-item {
+            border-left: 4px solid #00ff66;
+            background: rgba(0,255,102,0.03);
+            border-radius: 4px;
+            margin: 2px 0;
+            padding: 8px 16px;
+        }
+        .result-item.location-item .label i { color: #00ff66; }
+        .result-item.location-item .value { color: #00ff66; font-weight: 500; }
+        /* LIVE হলে লেফট বর্ডার লাল হবে */
+        .result-item.location-item.live {
+            border-left-color: #ff3355 !important;
+            background: rgba(255,51,85,0.03) !important;
+        }
+        .result-item.location-item.live .label i { color: #ff3355 !important; }
+        .result-item.location-item.live .value { color: #ff3355 !important; }
+
         .badge-row {
             display: flex; justify-content: center; gap: 16px;
             padding: 10px 14px; margin-top: 12px;
@@ -1205,6 +1089,11 @@ USER_PANEL_HTML = '''
             .result-item .value { width: 100%; text-align: left; }
             .main-container { padding: 12px 10px; }
             .badge-row { gap: 10px; }
+            .location-section .map-container .location-badge {
+                top: 8px; right: 8px;
+                font-size: 6px;
+                padding: 2px 10px;
+            }
         }
     </style>
 </head>
@@ -1255,7 +1144,7 @@ USER_PANEL_HTML = '''
                         <label><i class="fas fa-phone"></i> enter 10-digit number</label>
                         <div class="input-wrap">
                             <span class="code">+91</span>
-                            <input type="tel" id="phoneInput" placeholder="Enter phone number" maxlength="10" inputmode="numeric" value="9876543210">
+                            <input type="tel" id="phoneInput" placeholder="Enter phone number" maxlength="10" inputmode="numeric">
                         </div>
                     </div>
                     <div class="status-line">
@@ -1274,6 +1163,31 @@ USER_PANEL_HTML = '''
                     </div>
                     <div id="resultContent"></div>
                 </div>
+
+                <!-- ============================================
+                📍 LOCATION MAP SECTION - PERFECT BORDER
+                ============================================ -->
+                <div class="location-section" id="locationSection">
+                    <div class="map-container" id="mapContainer">
+                        <iframe id="mapIframe"
+                            src=""
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                        <div class="location-badge" id="locationBadge">
+                            <i class="fas fa-satellite-dish"></i>
+                            <span id="locationType">LIVE</span>
+                        </div>
+                    </div>
+                    <div class="map-label">
+                        <span class="hint"><i class="fas fa-map-pin"></i> <span id="locationLabel">Location</span></span>
+                        <a href="#" id="openMapsLink" class="open-link" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Google Maps
+                        </a>
+                    </div>
+                </div>
+
                 <div class="badge-row">
                     <span class="item"><i class="fas fa-lock"></i> ssl</span>
                     <span class="item"><i class="fas fa-shield-halved"></i> secure</span>
@@ -1320,6 +1234,7 @@ USER_PANEL_HTML = '''
             <div class="tricolor"><div class="saffron"></div><div class="white"></div><div class="green"></div></div>
         </div>
     </div>
+
     <script>
     // ===== SESSION TIMER =====
     let totalSeconds = {{ remaining_seconds }};
@@ -1368,6 +1283,58 @@ USER_PANEL_HTML = '''
         }
     }
 
+    // ============================================
+    // 📍 LOCATION FUNCTIONS - PERFECTED
+    // ============================================
+
+    function updateLocationMap(address, lat, lng, type) {
+        const section = document.getElementById('locationSection');
+        const iframe = document.getElementById('mapIframe');
+        const label = document.getElementById('locationLabel');
+        const openLink = document.getElementById('openMapsLink');
+        const badge = document.getElementById('locationBadge');
+        const locationType = document.getElementById('locationType');
+
+        if (!address || address === 'N/A' || address === 'Unknown' || address === '') {
+            section.classList.remove('show');
+            section.classList.remove('live', 'area');
+            return;
+        }
+
+        // লোকেশন টাইপ অনুযায়ী বর্ডার সেট করি
+        if (type === 'live') {
+            locationType.textContent = '🔴 LIVE';
+            badge.className = 'location-badge live';
+            section.className = 'location-section show live';
+        } else {
+            locationType.textContent = '📍 AREA';
+            badge.className = 'location-badge area';
+            section.className = 'location-section show area';
+        }
+
+        // ল্যাট/লং থাকলে সেটা ব্যবহার করি, না হলে এড্রেস
+        let query = address;
+        if (lat && lng) {
+            query = `${lat},${lng}`;
+        }
+
+        const cleanAddress = encodeURIComponent(query);
+        const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${cleanAddress}&zoom=16&maptype=roadmap`;
+
+        iframe.src = mapUrl;
+        label.textContent = address.substring(0, 60) + (address.length > 60 ? '...' : '');
+        openLink.href = `https://www.google.com/maps/search/?api=1&query=${cleanAddress}`;
+        section.classList.add('show');
+
+        setTimeout(() => {
+            section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 300);
+    }
+
+    // ============================================
+    // API CALL
+    // ============================================
+
     async function callAPI(number) {
         try {
             const response = await fetch('/api/lookup', {
@@ -1389,6 +1356,9 @@ USER_PANEL_HTML = '''
         const apiInfo = document.getElementById('apiInfo');
         const jsonBox = document.getElementById('jsonBox');
         const errorText = document.getElementById('errorText');
+        const locationSection = document.getElementById('locationSection');
+
+        locationSection.classList.remove('show', 'live', 'area');
 
         jsonBox.textContent = JSON.stringify(data, null, 2);
 
@@ -1423,10 +1393,23 @@ USER_PANEL_HTML = '''
                 <span class="label"><i class="fas fa-id-card"></i> aadhaar</span>
                 <span class="value gr">${info.aadhar || 'N/A'}</span>
             </div>`;
-            html += `<div class="result-item">
-                <span class="label"><i class="fas fa-map-pin"></i> address</span>
-                <span class="value addr">${info.address || 'N/A'}</span>
+            
+            // ===== লোকেশন - লাইভ নাকি এরিয়া =====
+            const address = info.address || info.location || 'N/A';
+            const hasLatLng = (info.lat && info.lng);
+            const locationType = hasLatLng ? 'live' : 'area';
+            const locationIcon = hasLatLng ? 'fa-satellite-dish' : 'fa-map-pin';
+            const locationColor = hasLatLng ? '#ff3355' : '#00ff66';
+            const locationClass = hasLatLng ? 'live' : '';
+            
+            html += `<div class="result-item location-item ${locationClass}">
+                <span class="label"><i class="fas ${locationIcon}" style="color:${locationColor};"></i> location</span>
+                <span class="value addr" id="addressValue">${address}</span>
+                <span style="font-size:6px; font-family:'Orbitron',monospace; color:#88ddff; margin-left:8px; border:1px solid ${locationColor}40; padding:1px 8px; border-radius:10px; background:${locationColor}10;">
+                    ${hasLatLng ? '🔴 LIVE' : '📍 AREA'}
+                </span>
             </div>`;
+            
             html += `<div class="result-item">
                 <span class="label"><i class="fas fa-signal"></i> circle</span>
                 <span class="value">${info.circle || 'N/A'}</span>
@@ -1447,6 +1430,13 @@ USER_PANEL_HTML = '''
             resultContent.innerHTML = html;
             resultBox.classList.add('show');
             errorText.classList.remove('show');
+
+            // 📍 লোকেশন ম্যাপ আপডেট করো - ল্যাট/লং সহ
+            if (address && address !== 'N/A') {
+                const lat = info.lat || null;
+                const lng = info.lng || null;
+                updateLocationMap(address, lat, lng, locationType);
+            }
 
             let apiHtml = '';
             if (data.BUY_API) apiHtml += `<span><i class="fas fa-shopping-cart" style="color:#00ffff;"></i> buy: <strong style="color:#00ffff;">${data.BUY_API}</strong></span>`;
@@ -1484,6 +1474,8 @@ USER_PANEL_HTML = '''
 
         document.getElementById('resultBox').classList.remove('show');
         document.getElementById('apiInfo').style.display = 'none';
+        document.getElementById('locationSection').classList.remove('show');
+        document.getElementById('locationSection').classList.remove('live', 'area');
 
         try {
             const data = await callAPI(number);
@@ -1530,8 +1522,10 @@ USER_PANEL_HTML = '''
     });
     document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
 
+    // ✅ পেজ লোড হলে আর অটো সার্চ হবে না - ইউজার নিজে নম্বর দিয়ে সার্চ করবে
     document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() { searchNumber(); }, 600);
+        console.log('🔥 SAKIL BHAI SYSTEM READY');
+        console.log('📱 Enter a 10-digit number and click search');
     });
     </script>
 </body>
@@ -2288,9 +2282,28 @@ def lookup():
         if api_data.get('status') == 'error':
             return jsonify(api_data)
 
+        result = api_data.get('result', [])
+        if result and len(result) > 0:
+            info = result[0]
+            address = info.get('address', info.get('location', ''))
+            
+            # লোকেশন লাইভ কিনা চেক করি - ল্যাট/লং থাকলে লাইভ
+            if 'lat' not in info and 'lng' not in info and address and address != 'N/A':
+                try:
+                    geocode_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={urllib.parse.quote(address)}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8"
+                    geo_response = requests.get(geocode_url, timeout=10)
+                    geo_data = geo_response.json()
+                    if geo_data['status'] == 'OK' and len(geo_data['results']) > 0:
+                        loc = geo_data['results'][0]['geometry']['location']
+                        info['lat'] = loc['lat']
+                        info['lng'] = loc['lng']
+                        # ল্যাট/লং থাকলে সেটা লাইভ লোকেশন
+                except:
+                    pass
+
         return jsonify({
             "status": "success",
-            "result": api_data.get('result', [])
+            "result": result
         })
 
     except requests.exceptions.Timeout:
@@ -2321,6 +2334,7 @@ if __name__ == '__main__':
     print("="*60)
     print("⚡ SAKIL BHAI - USER PANEL v8.0")
     print("🔥 CYBERPUNK EDITION · PREMIUM SYSTEM")
+    print("📍 PERFECT LOCATION TRACKING WITH BORDER")
     print("="*60)
     print(f"✅ User Panel:  http://0.0.0.0:{port}")
     print(f"✅ Login:       http://0.0.0.0:{port}/login")
